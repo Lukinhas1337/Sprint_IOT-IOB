@@ -176,4 +176,9 @@ Se houver erro (por exemplo, dependência faltando ou falha no reconhecimento), 
 ---
 
 Projeto acadêmico da disciplina **IoT & IOB** – Faculdade de Engenharia de Software.  
-Parte integrante do **Valoriza – Mentor Financeiro Consciente (XP Inc. Partnership)**.
+Parte integrante do **Valoriza – 
+Júlio César Zampieri RM98772
+Gustavo Melo RM98809
+Carlos Augusto Campos Ganzerli RM99840
+Lucas Carlos Bandeira Teixeira RM98640
+João Gabriel Dias RM99092**.
