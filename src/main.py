@@ -13,8 +13,13 @@ import joblib
 import json
 import numpy as np
 import os
+import tkinter as tk
+import subprocess
+import time
+from tkinter import messagebox
 from datetime import datetime
 from utils import ensure_dir, get_face_count
+
 
 CASCADE_PATH = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 MODEL_DIR = "models"
@@ -45,7 +50,45 @@ def simulate_features_from_frame(face_w, face_h):
 def human_label_from_pred(pred):
     return {0: "BAIXO", 1: "MÉDIO", 2: "ALTO"}.get(int(pred), "DESCONHECIDO")
 
+def show_success_window():
+    success = tk.Toplevel()  # Cria nova janela
+    success.title("Sucesso")
+    success.geometry("250x100")
+    success.resizable(False, False)
+
+    label = tk.Label(success, text="Login bem-sucedido ✅", font=("Arial", 12))
+    label.pack(expand=True)
+
+    ok_button = tk.Button(success, text="OK", width=10, command=success.destroy)
+    ok_button.pack(pady=5)
+
+def on_login():
+    try:
+      if(reconhecimento()):
+         show_success_window() 
+
+        
+
+    except subprocess.CalledProcessError:
+        messagebox.showerror("Erro", "Erro ao executar o main.py. Verifique o console.")
+    except Exception as e:
+        messagebox.showerror("Erro inesperado", str(e))
+
 def main():
+    root = tk.Tk()
+    root.title("Interface de Login")
+    root.geometry("400x400")
+    root.resizable(False, False)
+
+    frame = tk.Frame(root)
+    frame.pack(expand=True)
+
+    login_button = tk.Button(frame, text="Login", width=30, height=4, command=on_login)
+    login_button.pack()
+
+    root.mainloop()
+
+def reconhecimento():
     ensure_dir(MODEL_DIR)
     cap = cv2.VideoCapture(0)
     detector = cv2.CascadeClassifier(CASCADE_PATH)
@@ -72,9 +115,13 @@ def main():
     # Trackbars window
     win = "Valoriza - Demo"
     cv2.namedWindow(win)
-    cv2.createTrackbar("scale(x100)", win, 110, 200, nothing)  # 110 -> 1.10
+    cv2.createTrackbar("scale(x100)", win, 110, 200, nothing)
     cv2.createTrackbar("minNeighbors", win, 5, 15, nothing)
-    cv2.createTrackbar("minSize", win, 60, 300, nothing)  # px
+    cv2.createTrackbar("minSize", win, 60, 300, nothing)
+
+    # Variáveis para login por tempo
+    AUTHORIZED_TIME = 5  # segundos necessários de reconhecimento contínuo
+    auth_start_time = None
 
     while True:
         ret, frame = cap.read()
@@ -106,7 +153,6 @@ def main():
             if recognizer is not None:
                 try:
                     label_id, confidence = recognizer.predict(face_resized)
-                    # confidence: quanto menor, melhor (LBPH)
                     if label_id in labels:
                         label_text = labels[label_id]
                     else:
@@ -115,18 +161,30 @@ def main():
                 except Exception:
                     label_text = "ErroPredict"
 
-            # simular features e predizer risco
-            risk_text = "SEM MODELO"
-            # risco baseado na confiabilidade do reconhecimento facial
+            risk_text = "NAO AUTORIZADO"
+
+            # lógica de login por tempo
             if recognizer is not None and label_text != "Desconhecido" and conf_text:
                 try:
                     conf_value = float(conf_text.replace("conf ", ""))
-                    if conf_value < 50:
-                        risk_text = "BAIXO"
-                    elif conf_value < 80:
-                        risk_text = "MÉDIO"
+
+                    if conf_value >= 50:
+                        risk_text = "AUTORIZADO"
+                        if auth_start_time is None:
+                            auth_start_time = time.time()  # início da contagem
+                        else:
+                            elapsed = time.time() - auth_start_time
+                            if elapsed >= AUTHORIZED_TIME:
+                                risk_text = "AUTORIZADO"
+                                print("Login bem-sucedido para", label_text)
+                                cap.release()
+                                cv2.destroyAllWindows()
+                                return True
                     else:
-                        risk_text = "ALTO"
+                        auth_start_time = None
+                        risk_text = "NAO AUTORIZADO"
+                        print("Login não autorizado para", label_text)
+
                 except Exception:
                     risk_text = "INDEFINIDO"
             elif risk_model is not None:
@@ -136,21 +194,21 @@ def main():
 
             y_text = y - 10 if y - 10 > 10 else y + h + 20
             cv2.putText(frame, f"{label_text} {conf_text}", (x, y_text), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,255), 2)
-            cv2.putText(frame, f"Risco: {risk_text}", (x, y_text+20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,128,255), 2)
+            cv2.putText(frame, f" {risk_text}", (x, y_text+20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,128,255), 2)
 
         cv2.imshow(win, frame)
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
         if key == ord('s'):
-            # salvar screenshot com time
             ensure_dir("examples")
             fname = f"examples/screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
             cv2.imwrite(fname, frame)
             print("Salvou", fname)
-
+    
     cap.release()
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()

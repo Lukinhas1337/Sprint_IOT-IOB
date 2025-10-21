@@ -1,5 +1,12 @@
 # Valoriza – Reconhecimento Facial com Classificação de Risco
 
+## Novidades
+
+- Interface de login via Tkinter: permite autenticação por reconhecimento facial com botão "Login".
+- Execução robusta do reconhecimento facial: tratamento de erros na chamada do `main.py` e exibição de janela de sucesso apenas quando o login é bem-sucedido.
+- Instruções atualizadas para rodar a interface de login e o reconhecimento facial.
+
+
 Este projeto demonstra **reconhecimento facial em tempo real** usando **OpenCV** e classifica o **risco do usuário reconhecido** com base na **confiabilidade da verificação facial**.  
 Ele faz parte do trabalho **IoT & IOB** (Case: Apostas Compulsivas) e é um módulo local do projeto **Valoriza – Mentor Financeiro Consciente**, que visa monitorar comportamentos de risco e promover decisões financeiras mais saudáveis.
 
@@ -95,6 +102,76 @@ python src/main.py
 - scikit-learn
 - joblib
 - numpy, pandas
+- subprocess
+- tkinter
+
+
+## (NOVO) Sistema de Login
+Sistema de autenticação por reconhecimento facial integrado à interface gráfica.
+
+### Exemplo de uso
+
+Ao executar:
+```powershell
+python src/interface_login.py
+```
+Você verá uma janela como esta:
+
+```
+┌─────────────────────────────┐
+│  Interface de Login         │
+│ ────────────────────────── │
+│                             │
+│        [ Login ]            │
+└─────────────────────────────┘
+```
+
+Ao clicar em **Login**, o sistema executa o reconhecimento facial. Se o login for bem-sucedido, aparece:
+
+```
+┌─────────────────────────────┐
+│        Sucesso              │
+│ ────────────────────────── │
+│  Login bem-sucedido ✅      │
+│        [ OK ]               │
+└─────────────────────────────┘
+```
+
+Se houver erro (por exemplo, dependência faltando ou falha no reconhecimento), uma mensagem de erro será exibida na interface e detalhes aparecerão no console.
+
+### Fluxo de autenticação
+1. Usuário clica em **Login**.
+2. O sistema executa `main.py` usando o mesmo Python do ambiente.
+3. Se o reconhecimento facial for bem-sucedido (exit code 0), mostra janela de sucesso.
+4. Se houver erro, mostra mensagem de erro.
+
+### Dicas de depuração
+- Verifique o console para mensagens detalhadas de erro.
+- Certifique-se de que todas as dependências estão instaladas no ambiente virtual.
+- Se a webcam não for detectada, verifique permissões e drivers.
+- Para rodar em ambiente sem interface gráfica, adapte o código para modo headless (sem Tkinter/OpenCV GUI).
+
+### Como usar a interface de login
+
+1. Execute o arquivo de interface:
+   ```powershell
+   python src/interface_login.py
+   ```
+2. Clique no botão **Login** para iniciar o reconhecimento facial.
+3. Se o reconhecimento for bem-sucedido, uma janela de sucesso será exibida.
+4. Se houver erro na execução do reconhecimento, uma mensagem de erro será mostrada.
+
+### Observações técnicas
+- O botão de login executa o `main.py` usando o mesmo interpretador Python do ambiente.
+- O sistema trata erros de execução e só mostra a janela de sucesso se o processo terminar corretamente.
+- É necessário ambiente gráfico para rodar a interface (Tkinter) e o reconhecimento facial (OpenCV com suporte a janelas).
+
+### Dicas de resolução de problemas
+- Se aparecer erro de dependência (ex: `ModuleNotFoundError: No module named 'sklearn'`), instale as dependências com:
+  ```powershell
+  pip install -r requirements.txt
+  ```
+- Se o OpenCV lançar erro de janela (`NULL window`), verifique se está rodando em ambiente gráfico e se o pacote instalado é `opencv-contrib-python`.
 
 ---
 
